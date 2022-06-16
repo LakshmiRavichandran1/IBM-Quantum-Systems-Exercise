@@ -1,4 +1,4 @@
-# IBM Quantum Systems software exercise submission
+# IBM Quantum Systems software exercise -  submission 
 
 Exercise : https://github.com/atilag/IBM-Quantum-Systems-Exercise
 
@@ -21,13 +21,14 @@ To run the solution, please use generate_pulse_sequence_and_process.py
 3. Enter the choice of input to be processed - small or large
 4. The results are displayed in the terminal
 
-# Exception Handling:
+Exception Handling:
+------------------
 The solution implements exception handling to encounter any problems faced during service calls.
 In that case the result of None is considered.
 
 
-# Sample Output:
-
+Sample Output:
+--------------
 User Choice to process 'small' Quantum Programs:
 
 '
