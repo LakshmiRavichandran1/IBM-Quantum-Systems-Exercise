@@ -6,20 +6,21 @@ Exercise : https://github.com/atilag/IBM-Quantum-Systems-Exercise
 First of all, thank you for reviewing my submission.
 
 In my solution, I do the below:
-1. read the input for small or large quatum programs provided in the input.json
+1. read the input for small or large quatum programs provided in the 'input.json'
 2. generate pulse operations for the arithmetic operations in the quantum program 
-3. call the control_instrument API based on the type and obtin results. currently it is Acme or Madrid conrol instruments
+3. call the control_instrument API based on their type and obtain results. currently it is Acme or Madrid control instruments
 4. display the results
 
 ##
-In the solution, I used python programming language.
-I implemented a logic to convert the arithmentic to pulse operations by recusively parsing them.
+In the solution, I used 'python' programming language.
+I implemented a logic to convert the arithmetic operations to pulse operations by recusively parsing them.
 
-For improving the performance on processing large quantum programs, I implemented a solution using multi-processing to process the Pulse sequence submitted to each control instrument service paralllely which improves the processing time.
+For improving the performance on processing large quantum programs, I implemented a solution using multi-processing queues to process the pulse sequences submitted to each control instrument in parallel which improves the processing time.
 
 ##
-To run the solution, please use generate_pulse_sequence_and_process.py
-1. Please ensure the control instruments API services are active
+To run the solution, please use 'generate_pulse_sequence_and_process.py'
+
+1. Please ensure the control instrument's API services are active
 2. Configure the input json in the respectve files
 3. Enter the choice of input to be processed - small or large
 4. The results are displayed in the terminal
@@ -27,11 +28,12 @@ To run the solution, please use generate_pulse_sequence_and_process.py
 Exception Handling:
 ------------------
 The solution implements exception handling to encounter any problems faced during service calls.
-In that case the result of None is considered.
+In that case the result of 'None' is considered.
 
 
 Sample Output:
 --------------
+##
 User Choice to process 'small' Quantum Programs:
 
 '
@@ -56,6 +58,6 @@ ________________________________________________________________________________
 
 '
 
-
+##
 User Choice to process 'large' Quantum Programs:
 as the output has more lines to be displayed, I have attached them in sample_output_large.txt
