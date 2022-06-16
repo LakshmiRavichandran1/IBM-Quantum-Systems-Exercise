@@ -12,13 +12,13 @@ In my solution, I do the below:
 4. display the results
 
 ##
-In the solution, I used 'python' programming language.
-I implemented a logic to convert the arithmetic operations to pulse operations by recusively parsing them.
+In the solution, I used **'python'** programming language.
+- I implemented a logic to convert the arithmetic operations to pulse operations by recusively parsing them.
 
-For improving the performance on processing large quantum programs, I implemented a solution using multi-processing queues to process the pulse sequences submitted to each control instrument in parallel which improves the processing time.
+- For improving the performance on processing large quantum programs, I implemented a solution using multi-processing queues to process the pulse sequences submitted to each control instrument in parallel which improves the processing time.
 
 ##
-To run the solution, please use 'generate_pulse_sequence_and_process.py'
+To run the solution, please use **'generate_pulse_sequence_and_process.py'**
 
 1. Please ensure the control instrument's API services are active
 2. Configure the input json in the respectve files
