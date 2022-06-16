@@ -2,6 +2,7 @@
 
 Exercise : https://github.com/atilag/IBM-Quantum-Systems-Exercise
 
+## 
 First of all, thank you for reviewing my submission.
 
 In my solution, I do the below:
@@ -10,11 +11,13 @@ In my solution, I do the below:
 3. call the control_instrument API based on the type and obtin results. currently it is Acme or Madrid conrol instruments
 4. display the results
 
+##
 In the solution, I used python programming language.
 I implemented a logic to convert the arithmentic to pulse operations by recusively parsing them.
 
 For improving the performance on processing large quantum programs, I implemented a solution using multi-processing to process the Pulse sequence submitted to each control instrument service paralllely which improves the processing time.
 
+##
 To run the solution, please use generate_pulse_sequence_and_process.py
 1. Please ensure the control instruments API services are active
 2. Configure the input json in the respectve files
