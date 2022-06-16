@@ -1,228 +1,771 @@
-# IBM Quantum Systems software exercise proposal
+# IBM Quantum Systems software exercise submission
 
-We are building a new and exciting Quantum Computer!
-To improve user experience, we will allow our users to write high level quantum programs. Your task is to write a piece of system software that will compile, load, and run the user programs.
-Let's start with some terminologies!
+Exercise : https://github.com/atilag/IBM-Quantum-Systems-Exercise
 
+First of all, thank you for reviewing my submission.
 
-## What is a quantum computer?
-These quantum computers use quantum bits, or qubits, to carry information. We use microwave pulses to manipulate the qubits into desired states and to measure their final values. The specialty hardware used to generate these microwave pulses are called **control instruments**.
+In my solution, I do the below:
+1. read the input for small or large quatum programs provided in the input.json
+2. generate pulse operations for the arithmetic operations in the quantum program 
+3. call the control_instrument API based on the type and obtin results. currently it is Acme or Madrid conrol instruments
+4. display the results
 
+In the solution, I used python programming language.
+I implemented a logic to convert the arithmentic to pulse operations by recusively parsing them.
 
-## What is a quantum program?
-A quantum program contains source code that can be run on a quantum computer. Similar to the early years of classical computing, when people wrote in assembly to manipulate bits and registers, quantum programs today often consist of low level operations.
+For improving the performance on processing large quantum programs, I implemented a solution using multi-processing to process the Pulse sequence submitted to each control instrument service paralllely which improves the processing time.
 
-For the purpose of this exercise, let's assume that a quantum program is just a set of very simple **arithmetic operations** sequentially applied. Let's further assume these operations include only summation, multiplication, and division.
-This is an example of one arithmetic quantum program that could be the (json) input of our software:
-```
-{
-  "id": "abcdefghijkl",
-  "control_instrument": "ACME",
-  "initial_value": 10,
-  "operations": [
-    {
-      "type": "Sum",
-      "value": 120
-    },
-    {
-      "type": "Mul",
-      "value": 3
-    },
-    {
-      "type": "Div",
-      "value": 2
-    }
-  ]
-}
+To run the solution, please use generate_pulse_sequence_and_process.py
+1. Please ensure the control instruments API services are active
+2. Configure the input json in the respectve files
+3. Enter the choice of input to be processed - small or large
+4. The results are displayed in the terminal
 
-```
-
-## Some clarifications on the fields
-
-* **control_instrument**: The name of the control instrument this quantum program is targeting.
-* **initial_state**: This is the initial value of the quantum computer, right before we start running.
-* **operations**: An array of arithmetic operations to apply.
-* **type**: Indicates the type of operation: summation ("Sum"), multiplication ("Mul"), or division ("Div"). The "value" field contains the value to use. In the example above, the result will be ((10+120)*3)/2 = 195.
-
-## What is a Control Instrument?
-Similar to how classical programs need to be compiled into machine code before it can be loaded into a CPU, our "high level" quantum programs also need to be compiled into microwave pulse representation. The pulse representation can then be loaded into a control instrument to generate the correct pulses.
-
-The funny thing though, is that every instrument manufacturer has its own pulse representation. So a higher-level operation like Sum will be translated into different pulse sequence representations depending on the instrument used. The following table shows the pulse sequences from two different manufacturers, `ACME Instruments` and `Madrid Instruments`:
-
-## High-level operation
-
-| Arithmetic Operation | ACME Instruments Pulse sequence | Madrid Instruments Pulse sequence |
-| -------------------- | ------------------------------- | --------------------------------- |
-| Sum \<Value\>        |           Acme_pulse_1          |            Value                  |
-|                      |           Acme_pulse_2          |            Madrid_pulse_1         |
-|                      |           Value                 |                                   |
-| Mul \<Value\>        |           Acme_pulse_2          |             Value                 |
-|                      |           Acme_pulse_1          |             Madrid_pulse_2        |
-|                      |           Acme_pulse_1          |             Madrid_pulse_2        |
-|                      |           Value                 |                                   |
-| Div \<Value\>        |           Acme_pulse_2          |             Value                 |
-|                      |           Acme_pulse_2          |             Madrid_pulse_2        |
-|                      |           Value                 |             Madrid_pulse_1        |
-| Initial_state \<Value\>|      Acme_initial_state_pulse |       Value                       |
-|                      |        Value                    |       Madrid_initial_state_pulse  |
-	
-
-Your task here is to build a system software that will translate a high-level quantum program, which is the input of the software, into a pulse sequence that will be loaded and executed on a specific control instrument.  
-Very important!, you need to design your software in a way that is easy to extend in the case that we support dozens of different control instruments.
-The solution you will submit will only integrate with two of these control systems though: `ACME Instruments` and `Madrid Instruments`. We provide you with two REST services that simulate the control instrument systems for these two manufacturers but your solution doesn't have to assume that all the control instruments are REST services, they can be accesed by any kind of connection actually, so take this into account when you are designing this abstraction.
+Exception Handling:
+The solution implements exception handling to encounter any problems faced during service calls.
+In that case the result of None is considered.
 
 
-You can get `ACME Instruments` and `Madrid Instruments` from here:
-- https://github.com/atilag/AcmeInstrumentsService
-- https://github.com/atilag/MadridInstrumentsService
+Sample Output:
 
-Read the README on notes about running them.
-These programs will return a response with the result of the computation.
+User Choice to process 'small' Quantum Programs:
 
+'
+Welcome to the exercise ! 
+please ensure the control instrument is started and the access urls are properly defined
+____________________________________________________________________________________________________________   
+As sample, they can be started with commands 
+ 1. uvicorn acme_instruments_service.main:app --host 127.0.0.1 --port 8000 
+ 2. uvicorn madrid_instruments_service.main:app --host 127.0.0.1 --port 8080 
+____________________________________________________________________________________________________________   
+Please enter the choise of processing for generating pulse program for (small or large input) : small
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId986'}
+AcmeProgramId986
+********---Run Program --********
+195
+ ______________________________________________________  
+Printing the results of calculation from the Pulse Programs submitted:
+____________________________________________________________________________________________________________   
+[195]
 
-## An example
-Let's assume that your system software gets this quantum program as an input:
-```
-{
-  "id": "abcdefghijkl",
-  "control_instrument": "ACME",
-  "initial_value": 10,
-  "operations": [
-    {
-      "type": "Sum",
-      "value": 120
-    },
-    {
-      "type": "Mul",
-      "value": 3
-    },
-    {
-      "type": "Div",
-      "value": 2
-    }
-  ]
-}
-```
-
-The software then takes the following steps:
-1. Translate the program into pulse representation in JSON format, for an `ACME Instruments` device (which is the target taken from the **control_instrument** field):
-```
-{
-  "program_code": [
-    "Acme_initial_state_pulse",
-    10,
-    "Acme_pulse_1",
-    "Acme_pulse_2",
-    120,
-    "Acme_pulse_2",
-    "Acme_pulse_1",
-    "Acme_pulse_1",
-    3,
-    "Acme_pulse_2",
-    "Acme_pulse_2",
-    2
-  ]
-}
-```
+'
 
 
-2. Send this JSON message to the `ACME Instruments` REST Service through the exposed `/load_program` endpoint via POST:
-```
-POST /load_program
-{
-  "program_code": [
-    "Acme_initial_state_pulse",
-    10,
-    "Acme_pulse_1",
-    "Acme_pulse_2",
-    120,
-    "Acme_pulse_2",
-    "Acme_pulse_1",
-    "Acme_pulse_1",
-    3,
-    "Acme_pulse_2",
-    "Acme_pulse_2",
-    2
-  ]
-}
-```
-3. Receive a program ID that identifies the pulse program just loaded: `AcmeProgramId1`:
-```
-{
-  "program_id": "AcmeProgramId1"
-}
-```
+User Choice to process 'large' Quantum Programs:
+'
+rk/IBM-Quantum-Systems-Exercise/generate_pulse_sequence_and_process.py
+Welcome to the exercise ! 
+please ensure the control instrument is started and the access urls are properly defined
+____________________________________________________________________________________________________________   
+As sample, they can be started with commands 
+ 1. uvicorn acme_instruments_service.main:app --host 127.0.0.1 --port 8000 
+ 2. uvicorn madrid_instruments_service.main:app --host 127.0.0.1 --port 8080 
+____________________________________________________________________________________________________________   
+Please enter the choise of processing for generating pulse program for (small or large input) : large
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId987'}
+AcmeProgramId987
+********---Run Program --********
+0
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId988'}
+AcmeProgramId988
+********---Run Program --********
+1118
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1276'}
+MadridProgramId1276
+********---Run Program --********
+3
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1277'}
+MadridProgramId1277
+********---Run Program --********
+865184567
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1278'}
+MadridProgramId1278
+********---Run Program --********
+26920
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1279'}
+MadridProgramId1279
+********---Run Program --********
+1005872
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId989'}
+AcmeProgramId989
+********---Run Program --********
+201740370
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1280'}
+MadridProgramId1280
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId990'}
+AcmeProgramId990
+********---Run Program --********
+87840
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId991'}
+AcmeProgramId991
+********---Run Program --********
+0
+ ______________________________________________________  
+4233606953
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1281'}
+MadridProgramId1281
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1282'}
+MadridProgramId1282
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1283'}
+MadridProgramId1283
+********---Run Program --********
+133
+ ______________________________________________________  
+260089945
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId992'}
+AcmeProgramId992
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId993'}
+AcmeProgramId993
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId994'}
+AcmeProgramId994
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId995'}
+AcmeProgramId995
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1284'}
+MadridProgramId1284
+********---Run Program --********
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+********---Program Load --********
+{'program_id': 'AcmeProgramId996'}
+{'program_id': 'MadridProgramId1291'}
+AcmeProgramId996
+MadridProgramId1291
+********---Run Program --********
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1292'}
+MadridProgramId1292
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1293'}
+MadridProgramId1293
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1285'}
+MadridProgramId1285
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1286'}
+MadridProgramId1286
+********---Run Program --********
+259045933275201
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1287'}
+MadridProgramId1287
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1289'}
+MadridProgramId1289
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1290'}
+MadridProgramId1290
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1288'}
+MadridProgramId1288
+********---Run Program --********
+9868
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1294'}
+MadridProgramId1294
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1296'}
+MadridProgramId1296
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1297'}
+MadridProgramId1297
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1295'}
+MadridProgramId1295
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId997'}
+AcmeProgramId997
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId998'}
+AcmeProgramId998
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1000'}
+AcmeProgramId1000
+********---Run Program --********
+2043639
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1002'}
+AcmeProgramId1002
+********---Run Program --********
+15196045
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1005'}
+AcmeProgramId1005
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1006'}
+AcmeProgramId1006
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1008'}
+AcmeProgramId1008
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1010'}
+AcmeProgramId1010
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1012'}
+AcmeProgramId1012
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1013'}
+AcmeProgramId1013
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1014'}
+AcmeProgramId1014
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1016'}
+AcmeProgramId1016
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1017'}
+AcmeProgramId1017
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1019'}
+AcmeProgramId1019
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1021'}
+AcmeProgramId1021
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1024'}
+AcmeProgramId1024
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1025'}
+AcmeProgramId1025
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1027'}
+AcmeProgramId1027
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1029'}
+AcmeProgramId1029
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1030'}
+AcmeProgramId1030
+********---Run Program --********
+4743
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1298'}
+MadridProgramId1298
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1299'}
+MadridProgramId1299
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1300'}
+MadridProgramId1300
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1302'}
+MadridProgramId1302
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1303'}
+MadridProgramId1303
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1301'}
+MadridProgramId1301
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1001'}
+AcmeProgramId1001
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1003'}
+AcmeProgramId1003
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1004'}
+AcmeProgramId1004
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1007'}
+AcmeProgramId1007
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1009'}
+AcmeProgramId1009
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1015'}
+AcmeProgramId1015
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1018'}
+AcmeProgramId1018
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1022'}
+AcmeProgramId1022
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1028'}
+AcmeProgramId1028
+********---Run Program --********
+9622150
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1011'}
+AcmeProgramId1011
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1020'}
+AcmeProgramId1020
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1023'}
+AcmeProgramId1023
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1026'}
+AcmeProgramId1026
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId999'}
+AcmeProgramId999
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1304'}
+MadridProgramId1304
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1305'}
+MadridProgramId1305
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1306'}
+MadridProgramId1306
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1307'}
+MadridProgramId1307
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1309'}
+MadridProgramId1309
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1311'}
+MadridProgramId1311
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1312'}
+MadridProgramId1312
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1313'}
+MadridProgramId1313
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1315'}
+MadridProgramId1315
+********---Run Program --********
+3924
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1317'}
+MadridProgramId1317
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1318'}
+MadridProgramId1318
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1031'}
+AcmeProgramId1031
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1032'}
+AcmeProgramId1032
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1320'}
+MadridProgramId1320
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1321'}
+MadridProgramId1321
+********---Run Program --********
+1997
+ ______________________________________________________  
+1807275070708
+ ______________________________________________________  
+10812395237
+ ______________________________________________________  
+3128
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1033'}
+AcmeProgramId1033
+********---Run Program --********
+52258792464499
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1308'}
+MadridProgramId1308
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1314'}
+MadridProgramId1314
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1316'}
+MadridProgramId1316
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1319'}
+MadridProgramId1319
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1034'}
+AcmeProgramId1034
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'AcmeProgramId1035'}
+AcmeProgramId1035
+********---Run Program --********
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1322'}
+MadridProgramId1322
+********---Run Program --********
+18441
+ ______________________________________________________  
+13884
+ ______________________________________________________  
+10775923
+ ______________________________________________________  
+74643355444
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1310'}
+MadridProgramId1310
+********---Run Program --********
+7233
+ ______________________________________________________  
+819133
+ ______________________________________________________  
+281230016987528
+ ______________________________________________________  
+2208911
+ ______________________________________________________  
+5147312
+ ______________________________________________________  
+190068961
+ ______________________________________________________  
+873
+ ______________________________________________________  
+361
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1323'}
+MadridProgramId1323
+********---Run Program --********
+6
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1324'}
+MadridProgramId1324
+********---Run Program --********
+732531270
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1326'}
+MadridProgramId1326
+********---Run Program --********
+30
+ ______________________________________________________  
+12611
+14461421
+ ______________________________________________________  
+ ______________________________________________________  
+ ______________________________________________________  
+********---Program Load --********
+{'program_id': 'MadridProgramId1325'}
+MadridProgramId1325
+********---Run Program --********
+33508
+ ______________________________________________________  
+1723479
+ ______________________________________________________  
+148716
+ ______________________________________________________  
+192777
+ ______________________________________________________  
+239440
+ ______________________________________________________  
+2690
+ ______________________________________________________  
+17376752
+ ______________________________________________________  
+71523343
+ ______________________________________________________  
+3177346
+ ______________________________________________________  
+319
+ ______________________________________________________  
+479
+ ______________________________________________________  
+8703217
+ ______________________________________________________  
+7898199
+ ______________________________________________________  
+488514
+ ______________________________________________________  
+586353529
+ ______________________________________________________  
+505769
+ ______________________________________________________  
+4570
+ ______________________________________________________  
+4929296
+ ______________________________________________________  
+114
+ ______________________________________________________  
+1644760
+ ______________________________________________________  
+849
+ ______________________________________________________  
+17868269288136042
+ ______________________________________________________  
+286580
+ ______________________________________________________  
+7575435
+ ______________________________________________________  
+3074168651
+ ______________________________________________________  
+476630
+2582088
+ ______________________________________________________  
+ ______________________________________________________  
+1592652950
+ ______________________________________________________  
+73
+ ______________________________________________________  
+140
+ ______________________________________________________  
+162
+ ______________________________________________________  
+20859
+ ______________________________________________________  
+52024768
+ ______________________________________________________  
+239
+ ______________________________________________________  
+432319
+ ______________________________________________________  
+143906871
+ ______________________________________________________  
+1761444
+1492009
+ ______________________________________________________  
+ ______________________________________________________  
+305160730683692
+ ______________________________________________________  
+297793
+ ______________________________________________________  
+9
+ ______________________________________________________  
+37075460
+ ______________________________________________________  
+123695285388
+ ______________________________________________________  
+12386930
+ ______________________________________________________  
+320
+ ______________________________________________________  
+1500347
+ ______________________________________________________  
+41
+ ______________________________________________________  
+172136577470538
+ ______________________________________________________  
+7361
+ ______________________________________________________  
+3480
+ ______________________________________________________  
+912350972
+ ______________________________________________________  
+74
+ ______________________________________________________  
+218
+ ______________________________________________________  
+4152703
+ ______________________________________________________  
+686861
+ ______________________________________________________  
+761655129481
+ ______________________________________________________  
+67
+ ______________________________________________________  
+139125
+ ______________________________________________________  
+136
+ ______________________________________________________  
+Printing the results of calculation from the Pulse Programs submitted:
+____________________________________________________________________________________________________________   
+[0, 1118, 3, 865184567, 26920, 1005872, 201740370, 87840, 0, 4233606953, 133, 260089945, 259045933275201, 9868, 2043639, 15196045, 4743, 9622150, 3924, 1997, 1807275070708, 10812395237, 3128, 52258792464499, 18441, 13884, 10775923, 74643355444, 7233, 819133, 281230016987528, 2208911, 5147312, 190068961, 873, 361, 6, 732531270, 30, 14461421, 12611, 33508, 1723479, 148716, 192777, 239440, 2690, 17376752, 71523343, 3177346, 319, 479, 8703217, 7898199, 488514, 586353529, 505769, 4570, 4929296, 114, 1644760, 849, 17868269288136042, 286580, 7575435, 3074168651, 476630, 2582088, 1592652950, 73, 140, 162, 20859, 52024768, 239, 432319, 143906871, 1761444, 1492009, 305160730683692, 297793, 9, 37075460, 123695285388, 12386930, 320, 1500347, 41, 172136577470538, 7361, 3480, 912350972, 74, 218, 4152703, 686861, 761655129481, 67, 139125, 136]
 
-4. Trigger the execution of the program using the `ACME Instruments` REST Service endpoint: `/run_program` via GET:
-```
-GET /run_program/AcmeProgramId1
-```
-5. Receive the result of the execution of the quantum program: `195`:
-```
-{
-  "result": 195
-}
-```
-
-6. Return the result to the user or print it to stdout
-
-## What are we expecting to see in the code
-- Clean code!
-  - Think of it as high-quality production-ready code BUT is fine to make these assumptions/exceptions:
-  - The vendor-specific control instrument REST service connection is always fine, you don't have to write a rock-solid code around connecting to to the REST service.
-  - We could also assume that the input of the system is always well-formed. No edge cases, or complex user-facing error strategies.
-  - Use comments to explain design decisions if you want, but we are sure that your code talks by itself :)
-- Testing!
-  - Implement just a few (3 or 4) acceptance and unitary tests.
-  - If you can think of more interesting tests, just write the functions signature and make it clear what you want to test but do not implement then, just assert to true.
-- Pragmatism!
-  - Do not over-engineer
-  - Is fine if you take assumptions and write code that reflects them. But don't go crazy! Drop us a message if you have questions.
-  - You are free to write comments with the tradeoffs,  assumptions, notes you want us to know. Let your code talk for yourself!
-- Maintainability over performance!
-  - Maintainable code is preferred over performant code in general, but it's ok if you want to make some part performant on purpose, just let us know in a comment if you took this decision so we are aware that expressiveness has been scarified a little bit in favor of performance. Let us also know why do you think this code is performant! :)
-- It works! (mostly)
-  - We will run a set of tests with the inputs we provide just to check the software is correct... it's OK if there are some edge-cases not covered, but in general the software needs to work as expected.
-
-
-## Restrictions/Notes
-- We provide with two files: `quantum_program_input.json` and `large_quantum_program_input.json`. The former is just one arithmetic quantum program, and the latter is a list of 50 arithmetic quantum programs.
-- The case for one arithmetic quantum program as the JSON input is exactly the same as the example above, and the case of a list of arithmetic quantum programs is in the form of:
-```
-[
-  {"id": "asdfghjkl1...", ...}
-  {"id": "asdfghjkl5...", ...}
-  {"id": "asdfghjkl9...", ...}
-  ...
-]
-```
-- Each of the arithmetic quantum program in the list could have one of the two **control instrument** manufacturer: `Acme Instruments` or `Madrid Instruments`.
-```
-[
-  {"id": "asdfghjkl1...", control_instrument: "ACME", ... }
-  {"id": "asdfghjkl5...", control_instrument: "MADRID", ...}
-  {"id": "asdfghjkl9...", control_instrument: "ACME",...}
-  ...
-]
-```
-- As we are targeting two different **control instruments** manufacturers: `Acme Instruments` and `Madrid Instruments` and both REST services run in different processes, there's a chance to improve execution performance, we would like to see how! :)
-- We also provide a handy tool: `generate-quantum-programs.py`. This tool will generate random lists of inputs. We think this could be useful as a testing tool, you can read the details in the header of the source file.
-- You can choose to build a command line tool or a REST service if you prefer, we don't care, whatever works better for you. We will provide the input as files but it's ok if you want to create a client-like app to send the input.
-- Use non-GPL open-source libraries/packages/crates if you need/want to (you don't have to parse JSON by yourself nor implement HTTP protocol ;))
-- You are free to choose whatever build system, runtime environment, toolchain works better for you.
-- Drop some documentation on how to compile/run your program!
-
-## What programming language can I use to code the solution?
-Use the programming language you are more confortable with from this list:
-Rust, C++, C, Go, Java, Typescript, C#, Python, Javascript, PHP.
-If you want to use other language not included in this list, drop us an email and we can discuss.
-
-
-## How to submit the test
-We are proposing 2 ways:
-1. Create a Github repository and send us your link so we can clone it :)
-2. Send an email with the .tgz/.zip/.7z/etc
-
-Thank you very much for participating and spending your precious time with us!
-
-IBM Quantum Systems team.
+'
